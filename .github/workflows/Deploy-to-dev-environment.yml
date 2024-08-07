@@ -1,0 +1,53 @@
+name: Deploy-to-dev-environment
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch: 
+    inputs:
+      Environment:
+        type: choice
+        required: true
+        description: "Deployment Environment"
+        options: 
+        - Quality
+      GitBranch:
+        type: choice
+        #required: true
+        description: "Git Branch"
+        options:
+          - main 
+          - develop
+
+env:
+    Environment: ${{ inputs.Environment }}
+    
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+      statuses: read
+    with:
+      Environment: Dev
+      GitBranch: ${{ inputs.GitBranch }}
+
+  Echo:
+    name: Basic echo 
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: always() && (needs.test.result == 'success' || needs.test.result != 'failure') && false
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: "Get Current Date"
+        id: today
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Use Date Output
+        run: echo "The current date is ${{ steps.today.outputs.date }} ${{ inputs.GitBranch }}"

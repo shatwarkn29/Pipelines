@@ -1,0 +1,14 @@
+{
+  "country": {
+    "name": "India",
+    "code": "IN",
+    "capital": "New Delhi",
+    "population": 1393409038,
+    "area": 3287263,
+    "currency": {
+      "name": "Indian Rupee",
+      "code": "INR",
+      "symbol": "₹"
+    }
+  }
+}

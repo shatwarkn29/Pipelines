@@ -1,0 +1,54 @@
+name: update-master-branch-git-ff
+# **What it does**: Update master branch code to specific main branch SHA or commit id.
+on:
+  workflow_dispatch:
+    inputs:
+      TargetGitBranch:
+        type: choice
+        required: true
+        description: "Target Git Branch (fast forward)"
+        options:
+          - master
+      SourceGitBranch:
+        type: choice
+        required: true
+        description: "Source Git Branch"
+        options:
+          - main
+      GitSHA:
+        description: "Git SHA or commit id from main branch"
+        type: string
+        default: "refs/remotes/origin/main"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TargetGitBranch: ${{ inputs.TargetGitBranch }}
+  SourceGitBranch: ${{ inputs.SourceGitBranch }}
+  GitSHA: ${{ inputs.GitSHA }}
+
+jobs:
+  update-master-branch-from-main-branch:
+    name: "Update master Branch"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: "Update master branch to main branch commit id - ${{ inputs.GitSHA }}"
+        run: |
+          echo Reset Git Branch
+          git add . && git reset --hard
+          echo Git Checkout main Branch
+          git checkout --force -B main ${{ inputs.GitSHA }}
+          echo Git Checkout master Branch
+          git checkout --force -B master refs/remotes/origin/master
+          echo Git Fast-forward master Branch To main Branch
+          git merge main --ff-only
+          echo Git Push master Branch
+          git push origin master
+          echo Done

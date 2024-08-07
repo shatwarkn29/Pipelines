@@ -1,0 +1,41 @@
+name: perform-sonar-scan
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch:
+    inputs:
+      GitBranch:
+        type: choice
+        #required: true
+        description: "Git Branch"
+        options: 
+          - main
+          - develop
+  
+permissions:
+  contents: read
+
+env:
+  GitBranch: ${{ inputs.GitBranch }}
+  
+jobs:
+  Run_Sonar_Scan:
+    permissions:
+      contents: read
+    runs-on: ubunru-latest
+    name: Perform Sonar Scan for branch - ${{ inputs.GitBranch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.GitBranch }}
+          fetch-depth: 0
+          submodules: true
+      
+      - name: Run Sonarqube Analysis on branch - ${{ inputs.GitBranch }}
+        working-directory: ./FolderA
+        run: sonar-scanner -D"sonar.host.url=${{ secrets.SONAR_HOST_URL }}" -D"sonar.token=${{ secrets.SONAR_TOKEN}}" -D"sonar.projectKey=${{secrets.SONAR_PROJECT_KEY}}"

@@ -1,0 +1,31 @@
+name: Build and Test React App
+
+on:
+  workflow_call:
+    inputs:
+      Environment:
+          type: string
+          required: true
+          description: "Deployment Environment"
+      GitBranch:
+        type: string
+        required: true
+        description: "Git Branch"
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.GitBranch }}
+          fetch-depth: 0
+      - name: "Get Current Date"
+        id: today
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      - name: Use Date Output
+        run: echo "The current date is ${{ steps.today.outputs.date }}, ${{ inputs.GitBranch }}"
+      - name: dispatch trigger
+        run: |
+          echo "repository_dispatch triggered"

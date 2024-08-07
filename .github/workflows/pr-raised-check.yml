@@ -1,0 +1,25 @@
+name: PR raised check
+on:
+  pull_request:
+    branches:
+      - main 
+      - develop
+    types: [opened, reopened, edited, synchronize ]
+    paths-ignore:
+      - '.github/**'
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: "Get Current Date"
+        id: today
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Use Date Output
+        run: echo "The current date is ${{ steps.today.outputs.date }}
+
+        

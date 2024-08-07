@@ -1,0 +1,74 @@
+name: Deploy-based-on-file-change
+
+on:
+  push:
+    branches:
+      - main
+      - develop 
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  Echo:
+    name: Basic echo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.GitBranch }}
+          fetch-depth: 0
+
+      - name: "Get Current Date"
+        id: today
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Use Date Output
+        run: echo "The current date is ${{ steps.today.outputs.date }}"
+
+      - name: Define Paths Array
+        id: define_paths
+        run: |
+          echo "cmspaths=src/items:src/platform:./Readme.md:FolderA" >> $GITHUB_ENV
+          echo "Mainpaths=src/items:src/platform:./Readme.md:FolderB" >> $GITHUB_ENV
+
+      - name: Check Modified Files
+        id: check_files
+        run: |
+          echo "=============== list modified files ==============="
+          git diff --name-only HEAD^ HEAD > files.txt
+          Deploytocms='false'
+          DeploytoMain='false'
+          while IFS= read -r file
+          do
+            echo "$file"
+            IFS=':' read -r -a cmspaths_array <<< "$cmspaths"
+            for path in "${cmspaths_array[@]}"; do
+              if [[ "$file" == $path/* || "$file" == $path ]]; then
+                Deploytocms='true'
+                break
+              fi
+            done
+          done < files.txt
+          echo "Deploytocms=$Deploytocms" >> $GITHUB_ENV
+          while IFS= read -r file
+          do
+            echo "$file"
+            IFS=':' read -r -a Mainpaths_array <<< "$Mainpaths"
+            for path in "${Mainpaths_array[@]}"; do
+              if [[ "$file" == $path/* || "$file" == $path ]]; then
+                DeploytoMain='true'
+                break
+              fi
+            done
+          done < files.txt
+          echo "DeploytoMain=$DeploytoMain" >> $GITHUB_ENV
+
+      - name: Output Deployment Decision
+        run: |
+          echo "Deploytocms = ${{ env.Deploytocms }}"
+          echo "DeploytoMain = ${{ env.DeploytoMain }}"
