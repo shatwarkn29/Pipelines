@@ -1,0 +1,51 @@
+name: Perform-BlackDuckHub-Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      SourceGitBranch:
+        type: choice
+        required: true
+        description: "Source Git Branch"
+        options:
+          - develop
+
+permissions:
+  contents: read
+
+env:
+  SourceGitBranch: ${{ inputs.SourceGitBranch }}
+  BD_HUB_URL: <Specify the BlackDuck Hub URL>
+  BD_HUB_PROJECT: "<Specify the BlackDuck Hub Project Name>"
+
+jobs:
+  BD_HUB_SCAN:
+    name: BlackDuck Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.SourceGitBranch }}
+          fetch-depth: 0
+
+      - name: Perform Black Duck Hub scan for branch - ${{ inputs.SourceGitBranch }}
+        if: true
+# Specify the path for your project directory , eg:- src/projects 
+        working-directory: src/projects 
+# Download Detect script
+# Make downloaded script executable
+# Run Detect with arguments
+# Keep the BlackDuck Hub API Token in the secrets and read it. 
+        run: |
+           curl -sSL https://detect.synopsys.com/detect8.sh > detect.sh
+           chmod +x detect.sh
+           ./detect.sh \
+            --blackduck.url=${{ env.BD_HUB_URL }} \
+            --detect.project.name=${{ env.BD_HUB_PROJECT }} \
+            --detect.project.version.name=${{ inputs.SourceGitBranch }} \
+            --blackduck.api.token=${{ secrets.BD_HUB_APP_API_TOKEN }} \ 
+            --detect.npm.dependency.types.excluded=DEV \
+            --logging.level.detect=DEBUG \
+            --detect.cleanup=false \
+            --detect.diagnostic=true
