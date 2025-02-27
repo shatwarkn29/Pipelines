@@ -1,0 +1,28 @@
+name: update-develop-branch-git-ff
+on:
+  workflow_dispatch:
+    inputs:
+      GitSHA:
+        description: "Git SHA or commit ID from main branch"
+        type: string
+        required: true
+        default: "refs/remotes/origin/main"
+
+permissions:
+  contents: write
+
+jobs:
+  update-develop-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0  # Fetch full history to ensure we can reset properly
+
+      - name: Reset develop to the specified main commit
+        run: |
+          git fetch origin main
+          git reset --hard ${{ inputs.GitSHA }}
+          git push --force origin develop
