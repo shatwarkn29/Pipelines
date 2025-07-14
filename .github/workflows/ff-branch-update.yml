@@ -1,28 +1,31 @@
-name: update-develop-branch-git-ff
+name: Deploy using commit ID
+
 on:
   workflow_dispatch:
     inputs:
       GitSHA:
-        description: "Git SHA or commit ID from main branch"
+        description: "Provide GitHub Commit ID"
         type: string
         required: true
-        default: "refs/remotes/origin/main"
-
-permissions:
-  contents: write
 
 jobs:
-  update-develop-branch:
+  deploy:
     runs-on: ubuntu-latest
+    env:
+      GitSHA: ${{ inputs.GitSHA }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-          ref: develop
-          fetch-depth: 0  # Fetch full history to ensure we can reset properly
+          ref: ${{ env.GitSHA }}  # Uses the commit ID input
 
-      - name: Reset develop to the specified main commit
-        run: |
-          git fetch origin main
-          git reset --hard ${{ inputs.GitSHA }}
-          git push --force origin develop
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Run Echo World
+        run: echo "Hello World!"
+
+      - name: Print Commit ID
+        run: echo "Commit ID is $GitSHA"
